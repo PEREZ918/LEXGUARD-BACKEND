@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel de control LexGuard — Gestiona tus consultas legales.">
+    <title>Panel de Control | LexGuard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">LEX<span>GUARD</span></a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div class="notif-wrapper" id="notifWrapper" onclick="toggleNotifPanel()">
+                <span style="font-size: 1.25rem; cursor: pointer;">🔔</span>
+                <span class="notif-badge" id="notifCount" style="display: none;">0</span>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-header">
+                        <h4>Notificaciones</h4>
+                        <button class="btn btn-sm btn-outline" onclick="marcarTodasLeidas(event)">Leer todas</button>
+                    </div>
+                    <div id="notifList">
+                        <div class="empty-state" style="padding: 1.5rem;">
+                            <p>Sin notificaciones</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-wrapper">
+
+        <aside class="sidebar" id="dashSidebar">
+            <div class="sidebar-profile">
+                <div class="profile-name" id="sidebarName">Cargando...</div>
+                <div class="profile-role" id="sidebarRole">—</div>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" data-view="resumen" onclick="switchView('resumen', this)"><span
+                            class="menu-icon">📊</span> Resumen</a></li>
+                <li id="menuConsultas"><a href="#" data-view="consultas" onclick="switchView('consultas', this)"><span
+                            class="menu-icon">📝</span> Mis Consultas</a></li>
+                <li id="menuDisponibles" style="display:none;"><a href="#" data-view="disponibles"
+                        onclick="switchView('disponibles', this)"><span class="menu-icon">📋</span> Consultas
+                        Disponibles</a></li>
+                <li id="menuAsignadas" style="display:none;"><a href="#" data-view="asignadas"
+                        onclick="switchView('asignadas', this)"><span class="menu-icon">👨‍⚖️</span> Mis Consultas
+                        Asignadas</a></li>
+                <li id="menuNueva" style="display:none;"><a href="#" data-view="nueva"
+                        onclick="switchView('nueva', this)"><span class="menu-icon">➕</span> Nueva Consulta</a></li>
+                <li id="menuBandeja" style="display:none;"><a href="#" data-view="bandeja"
+                        onclick="switchView('bandeja', this)"><span class="menu-icon">📥</span> Bandeja</a></li>
+                <li id="menuAdmin" style="display:none;"><a href="admin.html"><span class="menu-icon">⚙️</span>
+                        Administración</a></li>
+            </ul>
+            <div class="sidebar-bottom">
+                <a href="index.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;">←
+                    Volver al inicio</a>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+
+            <div id="alertMessage" class="alert" style="display: none;"></div>
+
+            <div id="viewResumen" class="dash-view">
+                <div class="page-header">
+                    <h1>Panel de Control</h1>
+                    <p id="welcomeMsg">Bienvenido de vuelta</p>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="statTotal">-</div>
+                        <div class="stat-label">Total Consultas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-value" id="statPendientes">-</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="statResueltas">-</div>
+                        <div class="stat-label">Resueltas</div>
+                    </div>
+                    <div class="stat-card" id="statUsuariosCard" style="display:none;">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="statUsuarios">-</div>
+                        <div class="stat-label">Total Usuarios</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Actividad Reciente</h3>
+                    </div>
+                    <div class="consulta-list" id="recentList">
+                        <div class="empty-state" style="padding:0; text-align:left;">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card" style="margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewConsultas" class="dash-view" style="display:none;">
+                <div class="page-header">
+                    <h1 id="consultasTitle">Mis Consultas</h1>
+                    <p>Historial completo de tus consultas legales</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Todas las Consultas</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline filter-btn active"
+                                onclick="filterConsultas('TODAS', this)">Todas</button>
+                            <button class="btn btn-sm btn-outline filter-btn"
+                                onclick="filterConsultas('PENDIENTE', this)">Pendientes</button>
+                            <button class="btn btn-sm btn-outline filter-btn"
+                                onclick="filterConsultas('RESUELTA', this)">Resueltas</button>
+                        </div>
+                    </div>
+                    <div class="consulta-list" id="consultasList">
+                        <div class="empty-state" style="padding:0; text-align:left;">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card" style="margin-top: 1rem;"></div>
+                            <div class="skeleton skeleton-card" style="margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewNueva" class="dash-view" style="display:none;">
+                <div class="page-header">
+                    <h1>Crear Nueva Consulta</h1>
+                    <p>Describe tu situación legal con el mayor detalle posible</p>
+                </div>
+                <div class="card" style="max-width: 700px;">
+                    <form id="formConsulta">
+                        <div class="form-group">
+                            <label for="tituloConsulta">Título de tu consulta</label>
+                            <input type="text" id="tituloConsulta" required
+                                placeholder="Ej: Demanda por despido injustificado">
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoConsulta">Especialidad (Tipo)</label>
+                            <select id="tipoConsulta" class="form-control" required
+                                style="padding: 0.75rem; border: 1px solid var(--glass-border); border-radius: 8px; width: 100%; background: var(--bg-input); color: var(--text-primary); margin-bottom: 1rem;">
+                                <option value="CIVIL" selected>Derecho Civil</option>
+                                <option value="LABORAL">Derecho Laboral</option>
+                                <option value="PENAL">Derecho Penal</option>
+                                <option value="FAMILIAR">Derecho Familiar</option>
+                                <option value="COMERCIAL">Derecho Comercial</option>
+                                <option value="OTRO">Otro / General</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="descripcionConsulta">Descripción detallada</label>
+                            <textarea id="descripcionConsulta" required rows="6" class="form-control"
+                                placeholder="Describe tu situación con el mayor detalle posible. Incluye fechas, documentos relevantes y tu objetivo..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnCrearConsulta"
+                            style="padding: 0.75rem 2rem;">
+                            Enviar Consulta →
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="viewDisponibles" class="dash-view" style="display:none;">
+                <div class="page-header">
+                    <h1>Consultas Disponibles</h1>
+                    <p>Consultas legales que coinciden con tu especialidad</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Consultas por aceptar</h3>
+                    </div>
+                    <div class="consulta-list" id="disponiblesList">
+                        <div class="empty-state" style="padding:0; text-align:left;">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card" style="margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewAsignadas" class="dash-view" style="display:none;">
+                <div class="page-header">
+                    <h1>Mis Consultas Asignadas</h1>
+                    <p>Consultas que has aceptado y estás resolviendo</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Consultas asignadas a ti</h3>
+                    </div>
+                    <div class="consulta-list" id="asignadasList">
+                        <div class="empty-state">
+                            <div class="empty-icon">👨‍⚖️</div>
+                            <h4>Sin consultas asignadas</h4>
+                            <p>Acepta consultas disponibles para comenzar a resolverlas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="viewBandeja" class="dash-view" style="display:none;">
+                <div class="page-header">
+                    <h1>Bandeja de Consultas</h1>
+                    <p>Consultas legales pendientes de respuesta profesional</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Consultas Globales</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline filter-btn active"
+                                onclick="filterBandeja('TODAS', this)">Todas</button>
+                            <button class="btn btn-sm btn-outline filter-btn"
+                                onclick="filterBandeja('PENDIENTE', this)">Pendientes</button>
+                            <button class="btn btn-sm btn-outline filter-btn"
+                                onclick="filterBandeja('RESUELTA', this)">Resueltas</button>
+                        </div>
+                    </div>
+                    <div class="consulta-list" id="bandejaList">
+                        <div class="empty-state" style="padding:0; text-align:left;">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card" style="margin-top: 1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <div id="chatModal" class="chat-modal">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3 id="chatTitle">Chat - Consulta #</h3>
+                    <button class="chat-close" onclick="cerrarChat()">×</button>
+                </div>
+                <div id="chatMessages" class="chat-messages">
+                    <div class="empty-state" style="padding: 1.5rem; text-align:left;">
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text short"></div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Escribe tu mensaje..." />
+                    <button onclick="enviarMensaje()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // ================================================================
+        // ESTADO GLOBAL — compartido entre funciones top-level e IIFE
+        // ================================================================
+        let _allMyConsultas = [];
+        let _allBandejaConsultas = [];
+        let _myUserId = null;
+        let _isClient = false;
+        let _isLawyer = false;
+        let _isAdmin = false;
+        let _chatCurrentConsultaId = null;
+        let _chatStompClient = null;
+
+        // ================================================================
+        // UTILIDADES
+        // ================================================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function timeAgo(dateStr) {
+            const now = new Date();
+            const date = new Date(dateStr);
+            const diff = Math.floor((now - date) / 1000);
+            if (diff < 60) return 'Hace un momento';
+            if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+            if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} hrs`;
+            return `Hace ${Math.floor(diff / 86400)} días`;
+        }
+
+        function showAlert(msg, type) {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                ${escapeHTML(msg)}
+                <div class="toast-progress"></div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastFadeOut 0.4s forwards';
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+
+        // ================================================================
+        // FUNCIONES GLOBALES llamadas por onclick en el HTML
+        // Deben estar en scope global (fuera de cualquier IIFE/async)
+        // ================================================================
+
+        function switchView(viewName, linkEl) {
+            document.querySelectorAll('.dash-view').forEach(v => {
+                v.style.display = 'none';
+                v.classList.remove('animate-fade-up');
+            });
+            const viewEl = document.getElementById('view' + viewName.charAt(0).toUpperCase() + viewName.slice(1));
+            if (viewEl) {
+                viewEl.style.display = 'block';
+                viewEl.classList.add('animate-fade-up');
+            }
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+            if (linkEl) linkEl.classList.add('active');
+            if (viewName === 'consultas') loadMyConsultas();
+            if (viewName === 'disponibles') loadDisponibles();
+            if (viewName === 'asignadas') loadAsignadas();
+            if (viewName === 'bandeja') loadBandeja();
+            if (viewName === 'resumen') loadResumen();
+        }
+
+        function filterConsultas(estado, btnEl) {
+            document.querySelectorAll('#viewConsultas .filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            const filtered = estado === 'TODAS' ? _allMyConsultas : _allMyConsultas.filter(c => c.estado === estado);
+            renderConsultaList('consultasList', filtered, true);
+        }
+
+        function filterBandeja(estado, btnEl) {
+            document.querySelectorAll('#viewBandeja .filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            const filtered = estado === 'TODAS' ? _allBandejaConsultas : _allBandejaConsultas.filter(c => c.estado === estado);
+            renderConsultaList('bandejaList', filtered, false);
+        }
+
+        function toggleNotifPanel() {
+            document.getElementById('notifPanel').classList.toggle('show');
+        }
+
+        async function markNotifRead(id, el) {
+            await fetchApi(`/notificaciones/${id}/leer`, { method: 'PUT' });
+            el.classList.remove('unread');
+            loadNotifications();
+        }
+
+        async function marcarTodasLeidas(e) {
+            e.stopPropagation();
+            await fetchApi('/notificaciones/leer-todas', { method: 'PUT' });
+            loadNotifications();
+        }
+
+        async function aceptarConsulta(consultaId) {
+            const res = await fetchApi(`/consultas/${consultaId}/aceptar`, { method: 'POST' });
+            if (res && !res.isError) {
+                showAlert('Consulta aceptada. Ahora puedes responderla.', 'success');
+                loadDisponibles();
+                loadAsignadas();
+            } else {
+                showAlert('Error al aceptar la consulta.', 'danger');
+            }
+        }
+
+        async function rechazarConsulta(consultaId) {
+            if (confirm('¿Deseas rechazar esta consulta?')) {
+                const res = await fetchApi(`/consultas/${consultaId}/rechazar`, { method: 'POST' });
+                if (res && !res.isError) {
+                    showAlert('Consulta rechazada.', 'info');
+                    loadDisponibles();
+                } else {
+                    showAlert('Error al rechazar la consulta.', 'danger');
+                }
+            }
+        }
+
+        async function responderConsulta(id, btnEl) {
+            const textarea = btnEl.closest('.answer-box').querySelector('textarea');
+            const respText = textarea.value.trim();
+            if (!respText) { alert('La respuesta no puede estar vacía'); return; }
+            const res = await fetchApi(`/consultas/${id}/responder`, {
+                method: 'PUT',
+                body: JSON.stringify({ contenido: respText }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (res && !res.isError) {
+                showAlert('Respuesta enviada exitosamente.', 'success');
+                loadBandeja();
+                loadResumen();
+            } else {
+                showAlert('Error al enviar la respuesta.', 'danger');
+            }
+        }
+
+        async function abrirChat(consultaId) {
+            const consultaRes = await fetchApi(`/consultas/${consultaId}`, { method: 'GET' });
+            if (!consultaRes || consultaRes.isError) { showAlert('No se pudo cargar la consulta.', 'danger'); return; }
+            if (consultaRes.estadoAceptacion !== 'ACEPTADA') { showAlert('El chat solo está disponible cuando la consulta es aceptada.', 'danger'); return; }
+            _chatCurrentConsultaId = consultaId;
+            document.getElementById('chatTitle').textContent = `Chat - Consulta #${consultaId}`;
+            document.getElementById('chatModal').classList.add('active');
+            document.getElementById('chatInput').value = '';
+            await cargarMensajesChat(consultaId);
+            conectarWebSocketChat(consultaId);
+            document.getElementById('chatInput').focus();
+        }
+
+        function cerrarChat() {
+            _chatCurrentConsultaId = null;
+            document.getElementById('chatModal').classList.remove('active');
+            if (_chatStompClient && _chatStompClient.connected) {
+                _chatStompClient.disconnect(() => { _chatStompClient = null; });
+            }
+        }
+
+        async function enviarMensaje() {
+            const input = document.getElementById('chatInput');
+            const contenido = input.value.trim();
+            if (!contenido) { showAlert('El mensaje no puede estar vacío.', 'danger'); return; }
+            if (!_chatCurrentConsultaId) { showAlert('No hay consulta abierta.', 'danger'); return; }
+            try {
+                const res = await fetchApi(`/mensajes/consulta/${_chatCurrentConsultaId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ contenido })
+                });
+                if (res && !res.isError) {
+                    input.value = '';
+                } else {
+                    showAlert('Error al enviar mensaje.', 'danger');
+                }
+            } catch (err) {
+                console.error('Error enviando mensaje:', err);
+                showAlert('Error al enviar el mensaje.', 'danger');
+            }
+        }
+
+        // ================================================================
+        // RENDERIZADO
+        // ================================================================
+        function renderConsultaList(containerId, consultas, clientMode) {
+            const container = document.getElementById(containerId);
+            if (!consultas || consultas.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h4>No hay consultas</h4>
+                    <p>${clientMode ? 'Crea tu primera consulta legal para recibir asistencia.' : 'No hay consultas registradas en el sistema.'}</p>
+                </div>`;
+                return;
+            }
+            const sorted = [...consultas].sort((a, b) => b.id - a.id);
+            container.innerHTML = sorted.map(c => {
+                const isResuelta = c.estado === 'RESUELTA';
+                const badgeClass = isResuelta ? 'resuelta' : 'pendiente';
+                let answerHtml = '';
+                if (isResuelta && c.respuesta) {
+                    answerHtml = `<div class="answer-box"><div class="answer-label">✅ Respuesta del Abogado</div><p>${escapeHtml(c.respuesta)}</p></div>`;
+                } else if (!isResuelta && !clientMode) {
+                    answerHtml = `<div class="answer-box"><textarea class="form-control resp-textarea" rows="3" placeholder="Escribe tu respuesta profesional aquí..."></textarea><button class="btn btn-primary btn-sm" onclick="responderConsulta(${c.id}, this)" style="margin-top: 0.5rem;">Enviar Respuesta</button></div>`;
+                }
+                const clienteInfo = c.usuario ? `<span style="color: var(--text-muted); font-size: 0.8rem;"> · Solicitado por: ${escapeHtml(c.usuario.nombreCompleto || '')}</span>` : '';
+                let chatButton = '';
+                if (clientMode && c.estadoAceptacion === 'ACEPTADA') {
+                    chatButton = `<button class="chat-btn" onclick="abrirChat(${c.id})">💬 Abrir Chat</button>`;
+                }
+                return `
+                <div class="consulta-item">
+                    <div class="consulta-header">
+                        <span class="consulta-title">#${c.id} — ${escapeHtml(c.titulo)}</span>
+                        <span class="badge ${badgeClass}">${c.estado}</span>
+                    </div>
+                    <p class="consulta-desc">${escapeHtml(c.descripcion)}</p>
+                    <div class="consulta-meta">📅 ${new Date(c.fechaCreacion).toLocaleString('es-MX')}${!clientMode ? clienteInfo : ''}</div>
+                    ${chatButton}
+                    ${answerHtml}
+                </div>`;
+            }).join('');
+        }
+
+        function renderConsultaListForLawyer(containerId, consultas, isDisponible) {
+            const container = document.getElementById(containerId);
+            if (!consultas || consultas.length === 0) {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h4>No hay consultas</h4>
+                    <p>${isDisponible ? 'No hay consultas disponibles para tu especialidad en este momento.' : 'No tienes consultas asignadas aún.'}</p>
+                </div>`;
+                return;
+            }
+            const sorted = [...consultas].sort((a, b) => b.id - a.id);
+            container.innerHTML = sorted.map(c => {
+                const isResuelta = c.estado === 'RESUELTA';
+                const badgeClass = isResuelta ? 'resuelta' : 'pendiente';
+                const clienteInfo = c.usuario ? `<span style="color: var(--text-muted); font-size: 0.8rem;"> · Cliente: ${escapeHtml(c.usuario.nombreCompleto || '')}</span>` : '';
+                if (isDisponible) {
+                    return `
+                    <div class="consulta-item">
+                        <div class="consulta-header">
+                            <span class="consulta-title">#${c.id} — ${escapeHtml(c.titulo)}</span>
+                            <span class="badge ${badgeClass}">${c.estado}</span>
+                        </div>
+                        <p class="consulta-desc">${escapeHtml(c.descripcion)}</p>
+                        <div class="consulta-meta">📅 ${new Date(c.fechaCreacion).toLocaleString('es-MX')}${clienteInfo}</div>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="btn btn-primary btn-sm" onclick="aceptarConsulta(${c.id})">✅ Aceptar</button>
+                            <button class="btn btn-outline btn-sm" onclick="rechazarConsulta(${c.id})">❌ Rechazar</button>
+                        </div>
+                    </div>`;
+                } else {
+                    let answerHtml = '';
+                    if (isResuelta && c.respuesta) {
+                        answerHtml = `<div class="answer-box"><div class="answer-label">✅ Respuesta enviada</div><p>${escapeHtml(c.respuesta)}</p></div>`;
+                    } else {
+                        answerHtml = `<div class="answer-box"><textarea class="form-control resp-textarea" rows="3" placeholder="Escribe tu respuesta profesional aquí..."></textarea><button class="btn btn-primary btn-sm" onclick="responderConsulta(${c.id}, this)" style="margin-top: 0.5rem;">Enviar Respuesta</button></div>`;
+                    }
+                    let chatButton = c.estadoAceptacion === 'ACEPTADA' ? `<button class="chat-btn" onclick="abrirChat(${c.id})">💬 Abrir Chat</button>` : '';
+                    return `
+                    <div class="consulta-item">
+                        <div class="consulta-header">
+                            <span class="consulta-title">#${c.id} — ${escapeHtml(c.titulo)}</span>
+                            <span class="badge ${badgeClass}">${c.estado}</span>
+                        </div>
+                        <p class="consulta-desc">${escapeHtml(c.descripcion)}</p>
+                        <div class="consulta-meta">📅 ${new Date(c.fechaCreacion).toLocaleString('es-MX')}${clienteInfo}</div>
+                        ${chatButton}
+                        ${answerHtml}
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        // ================================================================
+        // CARGA DE DATOS
+        // ================================================================
+        async function loadResumen() {
+            const meRes = await fetchApi('/usuarios/me', { method: 'GET' });
+            if (meRes && !meRes.isError && meRes.id) _myUserId = meRes.id;
+
+            if (_isClient && _myUserId) {
+                const consultas = await fetchApi('/consultas/mis-consultas', { method: 'GET' });
+                if (consultas?.isError || !consultas?.content || !Array.isArray(consultas.content)) {
+                    document.getElementById('statsGrid').innerHTML = '<div class="empty-state" style="grid-column: 1/-1;"><div class="empty-icon">❌</div><h4>Error cargando estadísticas</h4><p>Verifica tu conexión o sesión.</p></div>';
+                    return;
+                }
+                const list = consultas.content;
+                _allMyConsultas = list;
+                document.getElementById('statTotal').textContent = list.length;
+                document.getElementById('statPendientes').textContent = list.filter(c => c.estado === 'PENDIENTE').length;
+                document.getElementById('statResueltas').textContent = list.filter(c => c.estado === 'RESUELTA').length;
+                renderConsultaList('recentList', list.slice(0, 5), true);
+            } else {
+                const stats = await fetchApi('/consultas/estadisticas', { method: 'GET' });
+                if (stats && !stats.isError) {
+                    document.getElementById('statTotal').textContent = stats.totalConsultas || 0;
+                    document.getElementById('statPendientes').textContent = stats.pendientes || 0;
+                    document.getElementById('statResueltas').textContent = stats.resueltas || 0;
+                    if (_isAdmin) document.getElementById('statUsuarios').textContent = stats.totalUsuarios || 0;
+                }
+                const todas = await fetchApi('/consultas/todas', { method: 'GET' });
+                if (todas && !todas.isError) {
+                    const list = todas.content || [];
+                    _allBandejaConsultas = list;
+                    renderConsultaList('recentList', list.slice(0, 5), false);
+                }
+            }
+        }
+
+        async function loadMyConsultas() {
+            const consultas = await fetchApi('/consultas/mis-consultas', { method: 'GET' });
+            if (consultas?.isError || !consultas?.content || !Array.isArray(consultas.content)) {
+                document.getElementById('consultasList').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><h4>Error cargando consultas</h4><p>Sin conexión al servidor o sesión expirada.</p></div>';
+                return;
+            }
+            _allMyConsultas = consultas.content;
+            renderConsultaList('consultasList', consultas.content, true);
+        }
+
+        async function loadDisponibles() {
+            const consultas = await fetchApi('/consultas/disponibles', { method: 'GET' });
+            if (consultas?.isError || !consultas?.content || !Array.isArray(consultas.content)) {
+                document.getElementById('disponiblesList').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><h4>Error cargando consultas disponibles</h4><p>Sin conexión o sin permisos.</p></div>';
+                return;
+            }
+            renderConsultaListForLawyer('disponiblesList', consultas.content, true);
+        }
+
+        async function loadAsignadas() {
+            const consultas = await fetchApi('/consultas/asignadas', { method: 'GET' });
+            if (consultas?.isError || !consultas?.content || !Array.isArray(consultas.content)) {
+                document.getElementById('asignadasList').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><h4>Error cargando consultas asignadas</h4><p>Sin conexión o sin permisos.</p></div>';
+                return;
+            }
+            renderConsultaListForLawyer('asignadasList', consultas.content, false);
+        }
+
+        async function loadBandeja() {
+            const consultas = await fetchApi('/consultas/todas', { method: 'GET' });
+            if (consultas?.isError || !consultas?.content || !Array.isArray(consultas.content)) {
+                document.getElementById('bandejaList').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><h4>Error cargando bandeja</h4><p>Sin conexión al servidor o permisos insuficientes.</p></div>';
+                return;
+            }
+            _allBandejaConsultas = consultas.content;
+            renderConsultaList('bandejaList', consultas.content, false);
+        }
+
+        async function loadNotifications() {
+            const countRes = await fetchApi('/notificaciones/no-leidas', { method: 'GET' });
+            if (countRes && !countRes.isError) {
+                const badge = document.getElementById('notifCount');
+                if (countRes.count > 0) {
+                    badge.textContent = countRes.count > 9 ? '9+' : countRes.count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            const notifs = await fetchApi('/notificaciones', { method: 'GET' });
+            if (notifs && !notifs.isError && notifs.length > 0) {
+                document.getElementById('notifList').innerHTML = notifs.slice(0, 10).map(n => `
+                <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="markNotifRead(${n.id}, this)">
+                    <div class="notif-msg">${escapeHtml(n.mensaje)}</div>
+                    <div class="notif-time">${timeAgo(n.fechaCreacion)}</div>
+                </div>`).join('');
+            }
+        }
+
+
+        async function cargarMensajesChat(consultaId) {
+            const mensajesRes = await fetchApi(`/mensajes/consulta/${consultaId}`, { method: 'GET' });
+            const msgContainer = document.getElementById('chatMessages');
+            if (!mensajesRes || mensajesRes.isError) {
+                msgContainer.innerHTML = '<div class="empty-state"><p>Error al cargar mensajes</p></div>';
+                return;
+            }
+            if (!Array.isArray(mensajesRes) || mensajesRes.length === 0) {
+                msgContainer.innerHTML = '<div class="empty-state" style="padding: 1.5rem;"><p>Sin mensajes aún</p></div>';
+                return;
+            }
+            const userActual = auth.getUser();
+            msgContainer.innerHTML = mensajesRes.map(msg => {
+                const isOwn = msg.usuario.id === userActual.id;
+                const hora = msg.fechaCreacion ? new Date(msg.fechaCreacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '';
+                return `
+                <div class="chat-message ${isOwn ? 'sent' : 'received'}">
+                    <div class="chat-bubble">${escapeHtml(msg.contenido)}</div>
+                    <div class="chat-time">${hora}</div>
+                </div>`;
+            }).join('');
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+        function conectarWebSocketChat(consultaId) {
+            if (_chatStompClient && _chatStompClient.connected) {
+                _chatStompClient.disconnect(() => iniciarWebSocketChat(consultaId));
+            } else {
+                iniciarWebSocketChat(consultaId);
+            }
+        }
+
+        function iniciarWebSocketChat(consultaId) {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socketUrl = `${protocol}//${window.location.host}/ws`;
+            _chatStompClient = new StompJs.Client({
+                brokerURL: socketUrl,
+                connectHeaders: { 'Authorization': `Bearer ${localStorage.getItem('lexguard_token')}` },
+                debug: () => { },
+                reconnectDelay: 5000,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
+            });
+            _chatStompClient.onConnect = () => {
+                _chatStompClient.subscribe(`/topic/consulta/${consultaId}`, (message) => {
+                    agregarMensajeAlChat(JSON.parse(message.body));
+                });
+            };
+            _chatStompClient.onStompError = (frame) => {
+                console.error('Error STOMP:', frame.headers['message']);
+            };
+            _chatStompClient.activate();
+        }
+
+        function agregarMensajeAlChat(mensaje) {
+            const msgContainer = document.getElementById('chatMessages');
+            const userActual = auth.getUser();
+            const isOwn = mensaje.usuario.id === userActual.id;
+            const hora = mensaje.fechaCreacion
+                ? new Date(mensaje.fechaCreacion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                : new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const emptyState = msgContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+            msgContainer.insertAdjacentHTML('beforeend', `
+            <div class="chat-message ${isOwn ? 'sent' : 'received'}">
+                <div class="chat-bubble">${escapeHtml(mensaje.contenido)}</div>
+                <div class="chat-time">${hora}</div>
+            </div>`);
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+
+        (async function () {
+            auth.protectRoute();
+
+            const meRes = await fetchApi('/usuarios/me');
+            if (!meRes || meRes.isError || meRes.status === 401) {
+                auth.clearSession();
+                window.location.href = 'login.html';
+                return;
+            }
+
+            auth.setSession({
+                token: localStorage.getItem('lexguard_token'),
+                nombreCompleto: meRes.nombreCompleto || meRes.nombre,
+                email: meRes.email,
+                rol: meRes.rol,
+                especialidad: meRes.especialidad,
+                id: meRes.id
+            });
+
+            _myUserId = meRes.id;
+
+            const user = auth.getUser();
+            _isClient = user.rol === 'CLIENTE';
+            _isLawyer = user.rol === 'ABOGADO';
+            _isAdmin = user.rol === 'ADMIN';
+
+            document.getElementById('sidebarName').textContent = user.nombre || 'Usuario';
+            document.getElementById('sidebarRole').textContent = user.rol;
+            document.getElementById('welcomeMsg').textContent = `Bienvenido de vuelta, ${user.nombre || 'Usuario'}`;
+
+            if (_isClient) {
+                document.getElementById('menuNueva').style.display = 'block';
+            }
+            if (_isLawyer) {
+                document.getElementById('menuDisponibles').style.display = 'block';
+                document.getElementById('menuAsignadas').style.display = 'block';
+                document.getElementById('menuConsultas').style.display = 'none';
+            }
+            if (_isLawyer || _isAdmin) {
+                document.getElementById('menuBandeja').style.display = 'block';
+            }
+            if (_isAdmin) {
+                document.getElementById('menuConsultas').style.display = 'block';
+                document.getElementById('menuAdmin').style.display = 'block';
+                document.getElementById('statUsuariosCard').style.display = 'block';
+            }
+
+            document.getElementById('formConsulta')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('btnCrearConsulta');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> Enviando...';
+                const payload = {
+                    titulo: document.getElementById('tituloConsulta').value,
+                    descripcion: document.getElementById('descripcionConsulta').value,
+                    tipo: document.getElementById('tipoConsulta').value,
+                    estado: 'PENDIENTE'
+                };
+                const res = await fetchApi('/consultas/crear', { method: 'POST', body: JSON.stringify(payload) });
+                if (res && !res.isError) {
+                    document.getElementById('formConsulta').reset();
+                    showAlert('Consulta enviada exitosamente. Un abogado la revisará pronto.', 'success');
+                    switchView('consultas', document.querySelector('[data-view="consultas"]'));
+                } else {
+                    showAlert('Error al crear la consulta. Inténtalo de nuevo.', 'danger');
+                }
+                btn.disabled = false;
+                btn.innerHTML = 'Enviar Consulta →';
+            });
+
+            document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje(); }
+            });
+
+            document.addEventListener('click', (e) => {
+                const wrapper = document.getElementById('notifWrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    document.getElementById('notifPanel').classList.remove('show');
+                }
+            });
+
+            await loadResumen();
+            loadNotifications();
+            setInterval(loadNotifications, 30000);
+        })();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</body>
+
+</html>

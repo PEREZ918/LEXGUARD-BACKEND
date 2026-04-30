@@ -1,0 +1,13 @@
+{
+    "hosting": {
+        "site": "lexguard-ae3b9-67636",
+        "public": "frontend",
+        "cleanUrls": true,
+        "rewrites": [
+            {
+                "source": "**",
+                "destination": "/index.html"
+            }
+        ]
+    }
+}

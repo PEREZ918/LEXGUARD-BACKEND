@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel de Administración LexGuard — Gestión de usuarios y consultas.">
+    <title>Administración | LexGuard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">LEX<span>GUARD</span></a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button class="btn btn-outline btn-sm" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-wrapper">
+
+        <aside class="sidebar">
+            <div class="sidebar-profile">
+                <div class="profile-name" id="sidebarName">Admin</div>
+                <div class="profile-role">ADMINISTRADOR</div>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" onclick="switchAdminView('stats', this)"><span class="menu-icon">📊</span> Estadísticas</a></li>
+                <li><a href="#" onclick="switchAdminView('users', this)"><span class="menu-icon">👥</span> Usuarios</a></li>
+                <li><a href="#" onclick="switchAdminView('queries', this)"><span class="menu-icon">📋</span> Consultas</a></li>
+            </ul>
+            <div class="sidebar-bottom">
+                <a href="dashboard.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;">← Panel Principal</a>
+            </div>
+        </aside>
+
+        
+        <main class="dashboard-main">
+
+            <div id="alertMsg" class="alert" style="display: none;"></div>
+
+            
+            <div id="viewStats" class="admin-view">
+                <div class="page-header">
+                    <h1>Estadísticas del Sistema</h1>
+                    <p>Visión general del estado de la plataforma</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="sTotalUsers">-</div>
+                        <div class="stat-label">Total Usuarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👤</div>
+                        <div class="stat-value" id="sClientes">-</div>
+                        <div class="stat-label">Clientes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚖️</div>
+                        <div class="stat-value" id="sAbogados">-</div>
+                        <div class="stat-label">Abogados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔑</div>
+                        <div class="stat-value" id="sAdmins">-</div>
+                        <div class="stat-label">Admins</div>
+                    </div>
+                </div>
+                <div class="stats-grid" style="margin-top: 0;">
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-value" id="sTotalConsultas">-</div>
+                        <div class="stat-label">Total Consultas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-value" id="sPendientes">-</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-value" id="sResueltas">-</div>
+                        <div class="stat-label">Resueltas</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="viewUsers" class="admin-view" style="display:none;">
+                <div class="page-header">
+                    <h1>Gestión de Usuarios</h1>
+                    <p>Administra las cuentas y roles de la plataforma</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Usuarios Registrados</h3>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                                <tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-secondary);">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="viewQueries" class="admin-view" style="display:none;">
+                <div class="page-header">
+                    <h1>Todas las Consultas</h1>
+                    <p>Registro completo de consultas legales</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Consultas del Sistema</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline filter-btn active" onclick="filterAdminQ('TODAS', this)">Todas</button>
+                            <button class="btn btn-sm btn-outline filter-btn" onclick="filterAdminQ('PENDIENTE', this)">Pendientes</button>
+                            <button class="btn btn-sm btn-outline filter-btn" onclick="filterAdminQ('RESUELTA', this)">Resueltas</button>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Título</th>
+                                    <th>Estado</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queriesBody">
+                                <tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-secondary);">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Protect: only ADMIN
+        auth.protectRoute();
+        const user = auth.getUser();
+        if (user.rol !== 'ADMIN') {
+            window.location.href = 'dashboard.html';
+        }
+        document.getElementById('sidebarName').textContent = user.nombre || 'Admin';
+
+        let allUsers = [];
+        let allQueries = [];
+
+        function switchAdminView(view, linkEl) {
+            document.querySelectorAll('.admin-view').forEach(v => v.style.display = 'none');
+            document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1)).style.display = 'block';
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+            if (linkEl) linkEl.classList.add('active');
+
+            if (view === 'stats') loadStats();
+            if (view === 'users') loadUsers();
+            if (view === 'queries') loadQueries();
+        }
+
+        async function loadStats() {
+            const uStats = await fetchApi('/usuarios/stats', { method: 'GET' });
+            if (uStats && !uStats.isError) {
+                document.getElementById('sTotalUsers').textContent = uStats.totalUsuarios || 0;
+                document.getElementById('sClientes').textContent = uStats.clientes || 0;
+                document.getElementById('sAbogados').textContent = uStats.abogados || 0;
+                document.getElementById('sAdmins').textContent = uStats.admins || 0;
+            }
+            const cStats = await fetchApi('/consultas/estadisticas', { method: 'GET' });
+            if (cStats && !cStats.isError) {
+                document.getElementById('sTotalConsultas').textContent = cStats.totalConsultas || 0;
+                document.getElementById('sPendientes').textContent = cStats.pendientes || 0;
+                document.getElementById('sResueltas').textContent = cStats.resueltas || 0;
+            }
+        }
+
+        async function loadUsers() {
+            const users = await fetchApi('/usuarios', { method: 'GET' });
+            if (users && !users.isError) {
+                allUsers = users;
+                renderUsersTable(users);
+            }
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersBody');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-secondary);">No hay usuarios</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td>#${u.id}</td>
+                    <td style="font-weight: 600;">${escapeHtml(u.nombreCompleto)}</td>
+                    <td style="color: var(--text-secondary);">${escapeHtml(u.email)}</td>
+                    <td>
+                        <select onchange="changeRole(${u.id}, this.value)" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.8rem; cursor: pointer;">
+                            <option value="CLIENTE" ${u.rol === 'CLIENTE' ? 'selected' : ''}>Cliente</option>
+                            <option value="ABOGADO" ${u.rol === 'ABOGADO' ? 'selected' : ''}>Abogado</option>
+                            <option value="ADMIN" ${u.rol === 'ADMIN' ? 'selected' : ''}>Admin</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id}, '${escapeHtml(u.nombreCompleto)}')">Eliminar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+
+        async function changeRole(userId, newRole) {
+            const res = await fetchApi(`/usuarios/${userId}/rol`, {
+                method: 'PUT',
+                body: JSON.stringify({ rol: newRole })
+            });
+            if (res && !res.isError) {
+                showAdminAlert('Rol actualizado exitosamente.', 'success');
+            } else {
+                showAdminAlert('Error al cambiar el rol.', 'danger');
+                loadUsers();
+            }
+        }
+
+        // ===== DELETE USER =====
+        async function deleteUser(userId, nombre) {
+            if (!confirm(`¿Estás seguro de eliminar a "${nombre}"? Esta acción no se puede deshacer.`)) return;
+
+            const res = await fetchApi(`/usuarios/${userId}`, { method: 'DELETE' });
+            if (res && !res.isError) {
+                showAdminAlert('Usuario eliminado exitosamente.', 'success');
+                loadUsers();
+                loadStats();
+            } else {
+                showAdminAlert('Error al eliminar el usuario.', 'danger');
+            }
+        }
+
+        async function loadQueries() {
+            const queries = await fetchApi('/consultas/todas', { method: 'GET' });
+            if (queries && !queries.isError) {
+                const content = queries.content || [];
+                allQueries = content;
+                renderQueriesTable(content);
+            }
+        }
+
+        function renderQueriesTable(queries) {
+            const tbody = document.getElementById('queriesBody');
+            if (!queries || queries.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-secondary);">No hay consultas</td></tr>';
+                return;
+            }
+            const sorted = [...queries].sort((a, b) => b.id - a.id);
+            tbody.innerHTML = sorted.map(q => {
+                const badgeClass = q.estado === 'RESUELTA' ? 'resuelta' : 'pendiente';
+                
+                let accionHTML = '';
+                if (q.estadoAceptacion !== 'ACEPTADA' && q.estado !== 'RESUELTA') {
+                    const abogados = allUsers.filter(u => u.rol === 'ABOGADO');
+                    const options = abogados.map(a => `<option value="${a.id}">${escapeHtml(a.nombreCompleto)}</option>`).join('');
+                    accionHTML = `
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <select id="asig-${q.id}" style="padding: 0.2rem; border: 1px solid var(--border); border-radius:4px; font-size:0.8rem; background: var(--bg-input); color: var(--text-primary); height:28px;">
+                                <option value="">Abogado...</option>
+                                ${options}
+                            </select>
+                            <button class="btn btn-sm btn-primary" style="padding: 0.2rem 0.5rem;" onclick="asignarAbogado(${q.id})">Asignar</button>
+                        </div>`;
+                } else if (q.estadoAceptacion === 'ACEPTADA') {
+                    accionHTML = `<span style="font-size:0.8rem; color: var(--text-secondary);">Asignado a #${q.abogadoAsignadoId || '?'}</span>`;
+                }
+                
+                return `
+                    <tr>
+                        <td>#${q.id}</td>
+                        <td style="font-weight: 500; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(q.titulo)}</td>
+                        <td><span class="badge ${badgeClass}">${q.estado}</span></td>
+                        <td style="color: var(--text-secondary);">${q.usuario ? escapeHtml(q.usuario.nombreCompleto) : '—'}</td>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">${new Date(q.fechaCreacion).toLocaleDateString('es-MX')}</td>
+                        <td>${accionHTML}</td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function filterAdminQ(estado, btnEl) {
+            document.querySelectorAll('#viewQueries .filter-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            const filtered = estado === 'TODAS' ? allQueries : allQueries.filter(q => q.estado === estado);
+            renderQueriesTable(filtered);
+        }
+
+        // ===== ASIGNAR ABOGADO =====
+        async function asignarAbogado(consultaId) {
+            const asigSelect = document.getElementById(`asig-${consultaId}`);
+            if (!asigSelect || !asigSelect.value) {
+                showAdminAlert('Selecciona un abogado primero.', 'danger');
+                return;
+            }
+            const payload = { abogadoId: parseInt(asigSelect.value) };
+            const res = await fetchApi(`/consultas/${consultaId}/asignar`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            
+            if (res && !res.isError) {
+                showAdminAlert('Abogado asignado con éxito.', 'success');
+                loadQueries();
+                loadStats();
+            } else {
+                showAdminAlert(res.error?.error || 'Error al asignar abogado', 'danger');
+            }
+        }
+
+        // ===== UTILS =====
+        function showAdminAlert(msg, type) {
+            const alert = document.getElementById('alertMsg');
+            alert.textContent = msg;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 4000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // INIT
+        loadStats();
+    </script>
+</body>
+</html>

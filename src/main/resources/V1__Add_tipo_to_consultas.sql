@@ -1,0 +1,2 @@
+
+ALTER TABLE consultas ADD COLUMN tipo VARCHAR(50) NOT NULL DEFAULT 'CIVIL' AFTER descripcion;
