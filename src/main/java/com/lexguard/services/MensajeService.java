@@ -12,7 +12,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MensajeService {
@@ -33,7 +35,6 @@ public class MensajeService {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró la consulta con ID: " + consultaId));
 
-        
         if (!"ACEPTADA".equals(consulta.getEstadoAceptacion())) {
             throw new IllegalStateException("La consulta debe estar aceptada para enviar mensajes");
         }
@@ -44,12 +45,22 @@ public class MensajeService {
         Mensaje mensaje = new Mensaje();
         mensaje.setConsulta(consulta);
         mensaje.setUsuario(usuario);
+        if (tipoEmisor == null) tipoEmisor = "";
         mensaje.setContenido(contenido);
         mensaje.setTipoEmisor(tipoEmisor);
         mensaje.setFechaCreacion(LocalDateTime.now());
 
         Mensaje guardado = mensajeRepository.save(mensaje);
-        messagingTemplate.convertAndSend("/topic/consulta/" + consultaId, guardado);
+
+        // Enviar DTO limpio por WebSocket para evitar serialización circular de JPA
+        Map<String, Object> wsPayload = new HashMap<>();
+        wsPayload.put("id", guardado.getId());
+        wsPayload.put("contenido", guardado.getContenido());
+        wsPayload.put("tipoEmisor", guardado.getTipoEmisor());
+        wsPayload.put("usuarioId", guardado.getUsuario().getId());
+        wsPayload.put("usuarioNombre", guardado.getUsuario().getNombreCompleto());
+        wsPayload.put("fechaCreacion", guardado.getFechaCreacion().toString());
+        messagingTemplate.convertAndSend("/topic/consulta/" + consultaId, (Object) wsPayload);
 
         return guardado;
     }

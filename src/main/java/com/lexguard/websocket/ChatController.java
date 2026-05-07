@@ -33,7 +33,8 @@ public class ChatController {
             response.put("id", mensaje.getId());
             response.put("contenido", mensaje.getContenido());
             response.put("tipoEmisor", mensaje.getTipoEmisor());
-            response.put("usuario", mensaje.getUsuario().getNombreCompleto());
+            response.put("usuarioId", mensaje.getUsuario().getId());
+            response.put("usuarioNombre", mensaje.getUsuario().getNombreCompleto());
             response.put("fechaCreacion", mensaje.getFechaCreacion());
             response.put("success", true);
 
