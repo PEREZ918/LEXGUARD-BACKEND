@@ -48,11 +48,14 @@ public class AuthController {
         String token = jwtUtil.generateToken(nuevoUsuario.getEmail(), nuevoUsuario.getRol().toString());
 
         Map<String, Object> response = new HashMap<>();
+        response.put("id", nuevoUsuario.getId());
         response.put("mensaje", "Usuario registrado exitosamente");
         response.put("token", token);
         response.put("email", nuevoUsuario.getEmail());
         response.put("rol", nuevoUsuario.getRol());
         response.put("nombreCompleto", nuevoUsuario.getNombreCompleto());
+     
+
         if (nuevoUsuario.getEspecialidad() != null) {
             response.put("especialidad", nuevoUsuario.getEspecialidad());
         }
@@ -66,6 +69,7 @@ public class AuthController {
         String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol().toString());
 
         Map<String, Object> response = new HashMap<>();
+        response.put("id", usuario.getId());
         response.put("mensaje", "Login exitoso");
         response.put("token", token);
         response.put("email", usuario.getEmail());
