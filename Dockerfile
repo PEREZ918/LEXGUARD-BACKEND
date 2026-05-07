@@ -10,4 +10,10 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=prod
-ENTRYPOINT ["java", "-Xmx300m", "-Xss512k", "-XX:CICompilerCount=2", "-jar", "app.jar"]
+ENV MYSQLHOST=monorail.proxy.rlwy.net
+ENV MYSQLPORT=31215
+ENV MYSQLDATABASE=railway
+ENV MYSQLUSER=root
+ENV MYSQLPASSWORD=meVnqCtwNMRlYtrErVPaRsjezagOLiKJ
+ENV JWT_SECRET=TGV4R3VhcmRQcm9kU2VjcmV0S2V5MjAyNlByb2plY3RTZWN1cml0eUtleTEyMzQ1Ng==
+ENTRYPOINT ["java", "-Xmx128m", "-XX:MaxMetaspaceSize=128m", "-Xss512k", "-XX:ReservedCodeCacheSize=64m", "-XX:CICompilerCount=2", "-jar", "app.jar"]
